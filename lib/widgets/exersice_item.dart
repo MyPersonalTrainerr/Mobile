@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:my_personal_trainer/providers/exercise.dart';
+import 'package:my_personal_trainer/screens/exersice_details.dart';
+import 'package:my_personal_trainer/widgets/exercise_item_content.dart';
+import 'package:provider/provider.dart';
 
 class ExerciseItem extends StatelessWidget {
-
-  final String id;
-  final String title;
-  final String imageUrl;
-  ExerciseItem({
-    required this.id,
-    required this.title,
-    required this.imageUrl,
-  });
-
   @override
   Widget build(BuildContext context) {
-    return Container();
+    final exerciseData = Provider.of<Exercise>(context, listen: false);
+
+    return ChangeNotifierProvider.value(
+      value: exerciseData,
+      child: InkWell(
+        onTap: () => Navigator.of(context).pushNamed(
+            ExersiceDetailsScreen.routeName,
+            arguments: exerciseData.id),
+        child: ExerciseItemContent(exerciseData),
+      ),
+    );
   }
 }
