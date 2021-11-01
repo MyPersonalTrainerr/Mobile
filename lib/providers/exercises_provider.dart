@@ -1,7 +1,6 @@
-import 'package:flutter/cupertino.dart';
-
 import 'package:flutter/material.dart';
 import 'package:my_personal_trainer/providers/exercise.dart';
+import 'package:my_personal_trainer/providers/exercises_provider.dart';
 import 'package:provider/provider.dart';
 
 class ExercisesProvider with ChangeNotifier {
@@ -26,4 +25,10 @@ class ExercisesProvider with ChangeNotifier {
   List<Exercise> get items {
     return [..._items];
   }
+
+  Exercise findItemById(String exerciseId) {
+    return _items.firstWhere((item) => item.id == exerciseId);
+  }
+
+  
 }
