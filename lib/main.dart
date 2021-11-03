@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:my_personal_trainer/providers/exercises_provider.dart';
-import 'package:my_personal_trainer/screens/exersice_details.dart';
-import 'package:my_personal_trainer/screens/exersices_overview.dart';
+import 'package:my_personal_trainer/screens/exercise_details.dart';
+import 'package:my_personal_trainer/screens/exercises_overview.dart';
+import 'package:my_personal_trainer/screens/user_sign.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -16,16 +17,17 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => ExercisesProvider(),
       child: MaterialApp(
-        title: 'Your Personal Trainer',
-        theme: ThemeData(
-          primarySwatch: Colors.purple,
-          accentColor: Colors.deepOrange,
-        ),
-        home: ExersicesOverviewScreen(),
-        routes: {
-          ExersiceDetailsScreen.routeName: (context) => ExersiceDetailsScreen(),
-        }
-      ),
+          title: 'Your Personal Trainer',
+          theme: ThemeData(
+            primarySwatch: Colors.purple,
+            accentColor: Colors.deepOrange,
+          ),
+          home: ExersicesOverviewScreen(),
+          routes: {
+            ExersiceDetailsScreen.routeName: (context) =>
+                ExersiceDetailsScreen(),
+            UserSignScreen.routeName: (context) => UserSignScreen(),
+          }),
     );
   }
 }
