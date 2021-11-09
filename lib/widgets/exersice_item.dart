@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_personal_trainer/providers/exercise.dart';
-import 'package:my_personal_trainer/screens/exersice_details.dart';
+import 'package:my_personal_trainer/screens/exercise_details.dart';
 import 'package:my_personal_trainer/widgets/exercise_item_content.dart';
 import 'package:provider/provider.dart';
 
