@@ -17,12 +17,12 @@ class _UserSignScreenState extends State<UserSignScreen> {
   late FocusNode passwordFocusNode;
   final _formKey = GlobalKey<FormState>();
   final List<String> userData = [];
-  late bool _passwordVisible;
+  late bool _passwordHidden;
 
   @override
   void initState() {
     passwordFocusNode = FocusNode();
-    _passwordVisible = false;
+    _passwordHidden = true;
     super.initState();
   }
 
@@ -33,7 +33,7 @@ class _UserSignScreenState extends State<UserSignScreen> {
   }
 
   void _postRequest(List data) async {
-    const url = "http://192.168.1.4:8000/Test";
+    const url = "https://awatef.pythonanywhere.com/signUpApi/";
     final response = await http.post(
       Uri.parse(url),
       body: json.encode(data),
@@ -41,7 +41,7 @@ class _UserSignScreenState extends State<UserSignScreen> {
   }
 
   Future<List<dynamic>> _fetchTaks() async {
-    const url = "http://192.168.1.4:8000/Test";
+    const url = "https://awatef.pythonanywhere.com/signUpApi/l";
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var data = json.decode(response.body) as List;
@@ -114,11 +114,11 @@ class _UserSignScreenState extends State<UserSignScreen> {
                     suffixIcon: IconButton(
                       onPressed: () {
                         setState(() {
-                          _passwordVisible = !_passwordVisible;
+                          _passwordHidden = !_passwordHidden;
                         });
                       },
                       icon: Icon(
-                        _passwordVisible
+                        _passwordHidden
                             ? Icons.visibility
                             : Icons.visibility_off,
                       ),
@@ -132,7 +132,7 @@ class _UserSignScreenState extends State<UserSignScreen> {
                   onSaved: (value) {
                     userData.add(value as String);
                   },
-                  obscureText: _passwordVisible,
+                  obscureText: _passwordHidden,
                   validator: (value) {
                     if (value!.isEmpty) {
                       return "Please enter a password";
