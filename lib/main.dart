@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:my_personal_trainer/providers/auth_provider.dart';
 import 'package:my_personal_trainer/providers/exercises_provider.dart';
+import 'package:my_personal_trainer/screens/auth_screen.dart';
 import 'package:my_personal_trainer/screens/exercise_details.dart';
 import 'package:my_personal_trainer/screens/exercises_overview.dart';
 import 'package:my_personal_trainer/screens/user_sign.dart';
@@ -14,20 +16,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => ExercisesProvider(),
-      child: MaterialApp(
-          title: 'Your Personal Trainer',
-          theme: ThemeData(
-            primarySwatch: Colors.purple,
-            accentColor: Colors.deepOrange,
-          ),
-          home: ExersicesOverviewScreen(),
-          routes: {
-            ExersiceDetailsScreen.routeName: (context) =>
-                ExersiceDetailsScreen(),
-            UserSignScreen.routeName: (context) => UserSignScreen(),
-          }),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => ExercisesProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => Auth(),
+        )
+      ],
+      child: Consumer<Auth>(
+        builder: (context, authData, _) => MaterialApp(
+            title: 'Your Personal Trainer',
+            theme: ThemeData(
+              primarySwatch: Colors.purple,
+              accentColor: Colors.amber,
+            ),
+            home: authData.isAuth ? ExersicesOverviewScreen() : AuthScreen(),
+            routes: {
+              ExersiceDetailsScreen.routeName: (context) =>
+                  ExersiceDetailsScreen(),
+              UserSignScreen.routeName: (context) => UserSignScreen(),
+            }),
+      ),
     );
   }
 }

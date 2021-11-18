@@ -36,11 +36,15 @@ class _UserSignScreenState extends State<UserSignScreen> {
     const url = "https://awatef.pythonanywhere.com/signUpApi/";
     final response = await http.post(
       Uri.parse(url),
-      body: json.encode(data),
+      body: {
+        "email": data[0],
+        "username": "khhhh",
+        "password": data[1],
+      },
     );
   }
 
-  Future<List<dynamic>> _fetchTaks() async {
+  Future<List<dynamic>> _fetchRequest() async {
     const url = "https://awatef.pythonanywhere.com/signUpApi/l";
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
