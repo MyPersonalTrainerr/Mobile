@@ -4,7 +4,7 @@ import 'package:my_personal_trainer/providers/exercises_provider.dart';
 import 'package:my_personal_trainer/screens/auth_screen.dart';
 import 'package:my_personal_trainer/screens/exercise_details.dart';
 import 'package:my_personal_trainer/screens/exercises_overview.dart';
-import 'package:my_personal_trainer/screens/user_sign.dart';
+import 'package:my_personal_trainer/screens/account_screen.dart';
 import 'package:provider/provider.dart';
 
 void main() {
