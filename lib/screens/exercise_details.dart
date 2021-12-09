@@ -9,6 +9,7 @@ import 'package:my_personal_trainer/widgets/video_preview.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 class ExersiceDetailsScreen extends StatefulWidget {
   const ExersiceDetailsScreen({Key? key}) : super(key: key);
@@ -24,8 +25,24 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
       await _controller!.setVolume(0.0);
     }
     final XFile? file = await _picker.pickVideo(
-        source: source, maxDuration: const Duration(seconds: 10));
+        source: source, maxDuration: const Duration(seconds: 3));
     await _playVideo(file);
+    uploadFile(file as XFile);
+
+  }
+
+  Future<void> uploadFile(XFile file) async {
+    var url = Uri.parse('http://awatef.pythonanywhere.com/fileUploadApi/');
+    var filePath = file.path;
+    try {
+      final response = await http.post(
+        url,
+        body: {"path": filePath},
+      );
+      print(response.body);
+    } catch (error) {
+      print(error);
+    }
   }
 
   VideoPlayerController? _controller;
@@ -132,6 +149,7 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
     final exercisesData =
         Provider.of<ExercisesProvider>(context, listen: false);
     final selectedExercise = exercisesData.findItemById(exerciseId as String);
+    // final serverData = Provider.of<Server>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -158,7 +176,7 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 16.0),
                 child: FloatingActionButton(
-                  backgroundColor: Theme.of(context).primaryColor,
+                  // backgroundColor: Theme.of(context).primaryColor,
                   onPressed: () {
                     _onImageButtonPressed(ImageSource.gallery);
                   },
@@ -167,14 +185,26 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
                   child: const Icon(Icons.video_library),
                 ),
               ),
+              // Padding(
+              //   padding: const EdgeInsets.only(top: 16.0),
+              //   child: FloatingActionButton(
+              //     // backgroundColor: Theme.of(context).primaryColor,
+              //     onPressed: () {
+              //       // serverData.uploadFile(file)
+              //     },
+              //     heroTag: 'video1',
+              //     tooltip: 'Upload Video to Server',
+              //     child: const Icon(Icons.upload),
+              //   ),
+              // ),
               Padding(
                 padding: const EdgeInsets.only(top: 16.0),
                 child: FloatingActionButton(
-                  backgroundColor: Theme.of(context).primaryColor,
+                  // backgroundColor: Theme.of(context).primaryColor,
                   onPressed: () {
                     _onImageButtonPressed(ImageSource.camera);
                   },
-                  heroTag: 'video1',
+                  heroTag: 'video2',
                   tooltip: 'Take a Video',
                   child: const Icon(Icons.videocam),
                 ),
@@ -186,5 +216,3 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
     );
   }
 }
-
-
