@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
             routes: {
               ExersiceDetailsScreen.routeName: (context) =>
                   ExersiceDetailsScreen(),
-              UserSignScreen.routeName: (context) => UserSignScreen(),
+              AccountScreen.routeName: (context) => AccountScreen(),
             }),
       ),
     );

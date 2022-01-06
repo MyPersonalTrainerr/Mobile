@@ -24,7 +24,8 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.settings),
             onTap: () {
-              Navigator.of(context).pushReplacementNamed(UserSignScreen.routeName);
+              Navigator.of(context)
+                  .pushReplacementNamed(AccountScreen.routeName);
             },
             title: const Text('Account'),
           ),
