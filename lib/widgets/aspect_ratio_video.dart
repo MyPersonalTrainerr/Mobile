@@ -42,14 +42,12 @@ class AspectRatioVideoState extends State<AspectRatioVideo> {
   @override
   Widget build(BuildContext context) {
     if (initialized) {
-      return Center(
-        child: AspectRatio(
-          aspectRatio: controller!.value.aspectRatio,
-          child: VideoPlayer(controller!),
-        ),
+      return AspectRatio(
+        aspectRatio: controller!.value.aspectRatio,
+        child: VideoPlayer(controller!),
       );
     } else {
-      return Container();
+      return const Center(child: CircularProgressIndicator());
     }
   }
 }
