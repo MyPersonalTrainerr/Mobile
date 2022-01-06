@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:my_personal_trainer/providers/auth_provider.dart';
+import 'package:my_personal_trainer/models/http_error.dart';
 
 enum AuthMode { Signup, Login }
 
@@ -47,6 +48,24 @@ class _AuthCardState extends State<AuthCard> {
     super.dispose();
   }
 
+  void _showErrorDialog(String errorMsg) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('An error Ocuured!'),
+        content: Text(errorMsg),
+        actions: <Widget>[
+          FloatingActionButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('okay'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       // Invalid!
@@ -71,8 +90,14 @@ class _AuthCardState extends State<AuthCard> {
           _authData['password'] as String,
         );
       }
+      // }
+    } on HttpError catch (error) {
+      var errorMsg = error.toString();
+      print(errorMsg);
+      _showErrorDialog(errorMsg);
     } catch (error) {
-      throw error;
+      var errorMsg = error.toString();
+      _showErrorDialog(errorMsg);
     }
 
     setState(() {
@@ -143,9 +168,9 @@ class _AuthCardState extends State<AuthCard> {
                     }
                   },
                   textInputAction: TextInputAction.next,
-                    onFieldSubmitted: (_) {
-                      FocusScope.of(context).requestFocus(passwordFocusNode);
-                    },
+                  onFieldSubmitted: (_) {
+                    FocusScope.of(context).requestFocus(passwordFocusNode);
+                  },
                   onSaved: (value) {
                     _authData['username'] = value as String;
                   },
@@ -169,8 +194,13 @@ class _AuthCardState extends State<AuthCard> {
                   obscureText: _passwordHidden,
                   controller: _passwordController,
                   validator: (value) {
-                    if (value!.isEmpty || value.length < 5) {
-                      return 'Password is too short!';
+                    if (_authMode == AuthMode.Signup) {
+                      if (value!.isEmpty || value.length < 5) {
+                        return 'Password is too short!';
+                      }
+                    }
+                    if (value!.isEmpty) {
+                      return "Password can't be empty!";
                     }
                   },
                   focusNode: passwordFocusNode,
