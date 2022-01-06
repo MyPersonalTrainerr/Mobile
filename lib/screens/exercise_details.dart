@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:my_personal_trainer/models/my_painter.dart';
 import 'package:my_personal_trainer/providers/exercises_provider.dart';
 import 'package:my_personal_trainer/widgets/aspect_ratio_video.dart';
 import 'package:my_personal_trainer/widgets/exercise_item_content.dart';
@@ -31,6 +32,27 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
   final TextEditingController maxWidthController = TextEditingController();
   final TextEditingController maxHeightController = TextEditingController();
   final TextEditingController qualityController = TextEditingController();
+
+  List<Map> jsonList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _getData();
+  }
+
+  void _getData() async {
+    String data = await DefaultAssetBundle.of(context)
+        .loadString("django/env/Backend/MyPersonalTrainer/Points.json");
+    List jsonData = json.decode(data);
+    // print(jsonData);
+    jsonData.forEach((element) {
+      element.forEach((key, value) {
+        jsonList.add(value);
+      });
+    });
+    print(jsonList.length);
+  }
 
   void _showErrorDialog(String errorMsg) {
     showDialog(
@@ -241,9 +263,22 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
                     child: Container(
                       width: width * 0.65,
                       height: height * 0.5,
-                      child: VideoPreview(
-                        retrieveLostData: retrieveLostData,
-                        previewVideo: _previewVideo,
+                      child: Stack(
+                        children: <Widget>[
+                          VideoPreview(
+                            retrieveLostData: retrieveLostData,
+                            previewVideo: _previewVideo,
+                          ),
+                          Stack(
+                              children: jsonList
+                                  .map((element) => CustomPaint(
+                                        painter: CirclePainter(
+                                          x: element['x'] * width,
+                                          y: element['y'] * height,
+                                        ),
+                                      ))
+                                  .toList()),
+                        ],
                       ),
                     ),
                   ),
