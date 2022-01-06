@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => Auth(),
-        )
+        ),
       ],
       child: Consumer<Auth>(
         builder: (context, authData, _) => MaterialApp(
@@ -32,7 +32,13 @@ class MyApp extends StatelessWidget {
               primarySwatch: Colors.purple,
               accentColor: Colors.amber,
             ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              primarySwatch: Colors.purple,
+              accentColor: Colors.amber,
+            ),
             home: authData.isAuth ? ExersicesOverviewScreen() : AuthScreen(),
+            // home: ExersicesOverviewScreen(),
             routes: {
               ExersiceDetailsScreen.routeName: (context) =>
                   ExersiceDetailsScreen(),
