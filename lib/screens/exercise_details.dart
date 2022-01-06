@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ExersiceDetailsScreen extends StatefulWidget {
   const ExersiceDetailsScreen({Key? key}) : super(key: key);
@@ -20,39 +21,65 @@ class ExersiceDetailsScreen extends StatefulWidget {
 }
 
 class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
-  void _onImageButtonPressed(ImageSource source) async {
-    if (_controller != null) {
-      await _controller!.setVolume(0.0);
-    }
-    final XFile? file = await _picker.pickVideo(
-        source: source, maxDuration: const Duration(seconds: 3));
-    await _playVideo(file);
-    uploadFile(file as XFile);
-
-  }
-
-  Future<void> uploadFile(XFile file) async {
-    var url = Uri.parse('http://awatef.pythonanywhere.com/fileUploadApi/');
-    var filePath = file.path;
-    try {
-      final response = await http.post(
-        url,
-        body: {"path": filePath},
-      );
-      print(response.body);
-    } catch (error) {
-      print(error);
-    }
-  }
-
+  XFile? _file;
   VideoPlayerController? _controller;
   VideoPlayerController? _toBeDisposed;
   String? _retrieveDataError;
+  bool _uploaded = false;
 
   final ImagePicker _picker = ImagePicker();
   final TextEditingController maxWidthController = TextEditingController();
   final TextEditingController maxHeightController = TextEditingController();
   final TextEditingController qualityController = TextEditingController();
+
+  void _showErrorDialog(String errorMsg) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('An error Ocuured!'),
+        content: Text(errorMsg),
+        actions: <Widget>[
+          FloatingActionButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('okay'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _uploadFile(XFile file) async {
+    var uri = Uri.parse('http://192.168.1.4:8000/fileUploadApi/');
+    // var uri = Uri.parse('http://awatef.pythonanywhere.com/fileUploadApi/');
+    // try {
+    var filename = file.path;
+    var request = http.MultipartRequest('POST', uri);
+    request.files
+        .add(await http.MultipartFile.fromPath('file_uploaded', filename));
+    var response = await request.send();
+    print(json.decode(response.toString()));
+    if (response.statusCode == 200) {
+      print('Uploaded!');
+      _uploaded = true;
+    }
+    // } catch (error) {
+    //   var errorMsg = "Can't conncet to the Server! Try again later.";
+    //   _showErrorDialog(errorMsg);
+    // }
+  }
+
+  void _onImageButtonPressed(ImageSource source) async {
+    if (_controller != null) {
+      await _controller!.setVolume(0.0);
+    }
+    _file = await _picker.pickVideo(
+        source: source, maxDuration: const Duration(seconds: 3));
+    // await _uploadFile(_file as XFile);
+    await _playVideo(_file);
+    await _uploadFile(_file as XFile);
+  }
 
   Future<void> _playVideo(XFile? file) async {
     if (file != null && mounted) {
@@ -72,8 +99,9 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
       final double volume = kIsWeb ? 0.0 : 1.0;
       await controller.setVolume(volume);
       await controller.initialize();
-      await controller.setLooping(true);
+      await controller.setLooping(false);
       await controller.play();
+      setState(() {});
     }
   }
 
@@ -109,15 +137,13 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
       return retrieveError;
     }
     if (_controller == null) {
-      return const Text(
+      return Text(
         'Try yourself, Pick a video!',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         textAlign: TextAlign.center,
       );
     }
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: AspectRatioVideo(_controller),
-    );
+    return AspectRatioVideo(_controller);
   }
 
   Text? _getRetrieveErrorWidget() {
@@ -149,64 +175,78 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
     final exercisesData =
         Provider.of<ExercisesProvider>(context, listen: false);
     final selectedExercise = exercisesData.findItemById(exerciseId as String);
-    // final serverData = Provider.of<Server>(context, listen: false);
+
+    final double height = MediaQuery.of(context).size.height;
+    final double width = MediaQuery.of(context).size.width;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Exercise Details',
         ),
+        // actions: <Widget>[
+        //   IconButton(
+        //     onPressed: () async {
+        //       _uploadFile(_file as XFile);
+        //     },
+        //     icon: Icon(Icons.save),
+        //   ),
+        // ],
       ),
       body: Column(
         children: <Widget>[
           ExerciseItemContent(selectedExercise),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(15),
-              height: MediaQuery.of(context).size.height * 0.4,
-              width: double.infinity,
-              child: VideoPreview(
-                  retrieveLostData: retrieveLostData,
-                  previewVideo: _previewVideo),
-            ),
-          ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: FloatingActionButton(
-                  // backgroundColor: Theme.of(context).primaryColor,
-                  onPressed: () {
-                    _onImageButtonPressed(ImageSource.gallery);
-                  },
-                  heroTag: 'video0',
-                  tooltip: 'Pick Video from gallery',
-                  child: const Icon(Icons.video_library),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.25,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: FloatingActionButton(
+                        // backgroundColor: Theme.of(context).primaryColor,
+                        onPressed: () {
+                          _onImageButtonPressed(ImageSource.gallery);
+                        },
+                        heroTag: 'video0',
+                        tooltip: 'Pick Video from gallery',
+                        child: const Icon(Icons.video_library),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: FloatingActionButton(
+                        // backgroundColor: Theme.of(context).primaryColor,
+                        onPressed: () {
+                          _onImageButtonPressed(ImageSource.camera);
+                        },
+                        heroTag: 'video1',
+                        tooltip: 'Take a Video',
+                        child: const Icon(Icons.videocam),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              // Padding(
-              //   padding: const EdgeInsets.only(top: 16.0),
-              //   child: FloatingActionButton(
-              //     // backgroundColor: Theme.of(context).primaryColor,
-              //     onPressed: () {
-              //       // serverData.uploadFile(file)
-              //     },
-              //     heroTag: 'video1',
-              //     tooltip: 'Upload Video to Server',
-              //     child: const Icon(Icons.upload),
-              //   ),
-              // ),
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: FloatingActionButton(
-                  // backgroundColor: Theme.of(context).primaryColor,
-                  onPressed: () {
-                    _onImageButtonPressed(ImageSource.camera);
-                  },
-                  heroTag: 'video2',
-                  tooltip: 'Take a Video',
-                  child: const Icon(Icons.videocam),
+              Container(
+                margin: EdgeInsets.all(5),
+                child: Card(
+                  elevation: 5,
+                  child: Container(
+                    // color: Colors.grey.shade400,
+                    padding: const EdgeInsets.all(5),
+                    child: Container(
+                      width: width * 0.65,
+                      height: height * 0.5,
+                      child: VideoPreview(
+                        retrieveLostData: retrieveLostData,
+                        previewVideo: _previewVideo,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
