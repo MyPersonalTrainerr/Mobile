@@ -2,83 +2,77 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:my_personal_trainer/providers/exercise_video_data.dart';
+import 'package:my_personal_trainer/value_notifiers/value_notifiers.dart';
+import 'package:my_personal_trainer/widgets/position_custom_paint.dart';
 import 'package:my_personal_trainer/providers/exercises_provider.dart';
 import 'package:my_personal_trainer/widgets/aspect_ratio_video.dart';
-import 'package:my_personal_trainer/widgets/exercise_item_content.dart';
 import 'package:my_personal_trainer/widgets/video_preview.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class ExersiceDetailsScreen extends StatefulWidget {
-  const ExersiceDetailsScreen({Key? key}) : super(key: key);
   static const routeName = '/exercise-details';
+  // VideoPlayerController? controller;
+  // XFile? file;
+  // final ImagePicker picker;
+  // VideoPlayerController? _toBeDisposed;
+  // String? _retrieveDataError;
+  // final TextEditingController maxWidthController;
+  // final TextEditingController maxHeightController;
+  // final TextEditingController qualityController;
+
+  // ExersiceDetailsScreen({
+  // required this.controller,
+  // required this.file,
+  // required this.picker,
+  // required this._toBeDisposed,
+  // required this._retrieveDataError,
+  // required this.maxHeightController,
+  // required this.maxWidthController,
+  // required this.qualityController,
+  // });
 
   @override
   State<ExersiceDetailsScreen> createState() => _ExersiceDetailsScreenState();
 }
 
 class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
-  XFile? _file;
   VideoPlayerController? _controller;
   VideoPlayerController? _toBeDisposed;
-  String? _retrieveDataError;
-  bool _uploaded = false;
-
   final ImagePicker _picker = ImagePicker();
+  XFile? _file;
+  String? _retrieveDataError;
   final TextEditingController maxWidthController = TextEditingController();
   final TextEditingController maxHeightController = TextEditingController();
   final TextEditingController qualityController = TextEditingController();
+  bool isUploading = false;
 
-  void _showErrorDialog(String errorMsg) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('An error Ocuured!'),
-        content: Text(errorMsg),
-        actions: <Widget>[
-          FloatingActionButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('okay'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _uploadFile(XFile file) async {
-    var uri = Uri.parse('http://192.168.1.4:8000/fileUploadApi/');
-    // var uri = Uri.parse('http://awatef.pythonanywhere.com/fileUploadApi/');
-    // try {
-    var filename = file.path;
-    var request = http.MultipartRequest('POST', uri);
-    request.files
-        .add(await http.MultipartFile.fromPath('file_uploaded', filename));
-    var response = await request.send();
-    print(json.decode(response.toString()));
-    if (response.statusCode == 200) {
-      print('Uploaded!');
-      _uploaded = true;
-    }
-    // } catch (error) {
-    //   var errorMsg = "Can't conncet to the Server! Try again later.";
-    //   _showErrorDialog(errorMsg);
-    // }
-  }
-
-  void _onImageButtonPressed(ImageSource source) async {
+  @override
+  void deactivate() {
     if (_controller != null) {
-      await _controller!.setVolume(0.0);
+      _controller!.setVolume(0.0);
+      _controller!.pause();
     }
-    _file = await _picker.pickVideo(
-        source: source, maxDuration: const Duration(seconds: 3));
-    // await _uploadFile(_file as XFile);
-    await _playVideo(_file);
-    await _uploadFile(_file as XFile);
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    // _disposeVideoController();
+    maxWidthController.dispose();
+    maxHeightController.dispose();
+    qualityController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _disposeVideoController() async {
+    if (_toBeDisposed != null) {
+      await _toBeDisposed!.dispose();
+    }
+    _toBeDisposed = _controller;
+    _controller = null;
   }
 
   Future<void> _playVideo(XFile? file) async {
@@ -105,30 +99,23 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
     }
   }
 
-  @override
-  void deactivate() {
+  void _onImageButtonPressed(ImageSource source, double height, double width,
+      Function uploadFile, Function getData, BuildContext context) async {
     if (_controller != null) {
-      _controller!.setVolume(0.0);
-      _controller!.pause();
+      await _controller!.setVolume(0.0);
     }
-    super.deactivate();
-  }
-
-  @override
-  void dispose() {
-    _disposeVideoController();
-    maxWidthController.dispose();
-    maxHeightController.dispose();
-    qualityController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _disposeVideoController() async {
-    if (_toBeDisposed != null) {
-      await _toBeDisposed!.dispose();
-    }
-    _toBeDisposed = _controller;
-    _controller = null;
+    _file = await _picker.pickVideo(
+        source: source, maxDuration: const Duration(seconds: 10));
+    print("upload?");
+    await uploadFile(_file as XFile);
+    // await Future.delayed(Duration(seconds: 1));
+    setState(() {
+      isUploading = false;
+    });
+    await _playVideo(_file);
+    drawing.value = true;
+    await getData(width, height, context);
+    print("drawing in main ${drawing.value}");
   }
 
   Widget _previewVideo() {
@@ -136,13 +123,13 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
     if (retrieveError != null) {
       return retrieveError;
     }
-    if (_controller == null) {
-      return Text(
-        'Try yourself, Pick a video!',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        textAlign: TextAlign.center,
-      );
-    }
+    // if (widget.controller == null) {
+    //   return const Text(
+    //     'Try yourself, Pick a video!',
+    //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    //     textAlign: TextAlign.center,
+    //   );
+    // }
     return AspectRatioVideo(_controller);
   }
 
@@ -167,91 +154,202 @@ class _ExersiceDetailsScreenState extends State<ExersiceDetailsScreen> {
     }
   }
 
+  // AppBar appBarWidget(
+  //     double height, double width, Function uploadFile, Function getData) {
+  //   AppBar appBar = AppBar(
+  //     title: Text(
+  //       "LET'S DO IT!",
+  //       style: TextStyle(fontWeight: FontWeight.bold),
+  //     ),
+  //     actions: <Widget>[
+  // IconButton(
+  //   onPressed: () async {
+  //     setState(() {});
+  //     _onImageButtonPressed(
+  //         ImageSource.gallery, height, width, uploadFile, getData);
+  //     await uploadFile(_file as XFile);
+  //     await _playVideo(_file);
+  //     drawing.value = true;
+  //     await getData(width, height, context);
+  //     print("drawing in main ${drawing.value}");
+  //   },
+  //   icon: const Icon(Icons.video_library),
+  // ),
+  // IconButton(
+  //   onPressed: () {
+  //     setState(() {});
+  //     _onImageButtonPressed(
+  //         ImageSource.camera, height, width, uploadFile, getData);
+  //   },
+  //   icon: const Icon(Icons.videocam),
+  // ),
+  // IconButton(
+  //   onPressed: () async {
+  //56 for appBar
+  // drawing.value = true;
+  // print("drawing in main ${drawing.value}");
+  // videoData.getData(width, height - 56, context);
+  // await Future.delayed(Duration(seconds: 5));
+  // },
+  // icon: const Icon(Icons.run_circle),
+  // ),
+  // ],
+  // );
+  // final double appBarHeight = appBar.preferredSize.height;
+  // print("appbar height is $appBarHeight");
+  // return appBar;
+  // }
+
   @override
   Widget build(BuildContext context) {
-    final routeArgs = ModalRoute.of(context)!.settings.arguments;
-    final exerciseId = routeArgs;
+    // final videoFileProvider =
+    //     Provider.of<ExerciseVideo>(context, listen: false);
+    // XFile videoFile = videoFileProvider.getVideoFile;
 
-    final exercisesData =
-        Provider.of<ExercisesProvider>(context, listen: false);
-    final selectedExercise = exercisesData.findItemById(exerciseId as String);
+    // final routeArgs = ModalRoute.of(context)!.settings.arguments;
+    // final exerciseId = routeArgs;
 
+    // final exercisesData =
+    // Provider.of<ExercisesProvider>(context, listen: false);
+    // final selectedExercise = exercisesData.findItemById(exerciseId as String);
+
+    final videoData = Provider.of<ExcerciseVideoData>(context, listen: false);
+    final AppBar appBar = AppBar(
+      title: Text(
+        "LET'S DO IT!",
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+    );
     final double height = MediaQuery.of(context).size.height;
     final double width = MediaQuery.of(context).size.width;
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Exercise Details',
-        ),
-        // actions: <Widget>[
-        //   IconButton(
-        //     onPressed: () async {
-        //       _uploadFile(_file as XFile);
-        //     },
-        //     icon: Icon(Icons.save),
-        //   ),
-        // ],
-      ),
-      body: Column(
-        children: <Widget>[
-          ExerciseItemContent(selectedExercise),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Container(
-                width: MediaQuery.of(context).size.width * 0.25,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: FloatingActionButton(
-                        // backgroundColor: Theme.of(context).primaryColor,
-                        onPressed: () {
-                          _onImageButtonPressed(ImageSource.gallery);
-                        },
-                        heroTag: 'video0',
-                        tooltip: 'Pick Video from gallery',
-                        child: const Icon(Icons.video_library),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: FloatingActionButton(
-                        // backgroundColor: Theme.of(context).primaryColor,
-                        onPressed: () {
-                          _onImageButtonPressed(ImageSource.camera);
-                        },
-                        heroTag: 'video1',
-                        tooltip: 'Take a Video',
-                        child: const Icon(Icons.videocam),
-                      ),
-                    ),
+      appBar: appBar,
+      body: Container(
+        height: height,
+        width: width,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            // ExerciseItemContent(selectedExercise),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.fromRGBO(143, 148, 251, .2),
+                    Color.fromRGBO(143, 148, 251, .4),
                   ],
                 ),
               ),
-              Container(
-                margin: EdgeInsets.all(5),
-                child: Card(
-                  elevation: 5,
-                  child: Container(
-                    // color: Colors.grey.shade400,
-                    padding: const EdgeInsets.all(5),
-                    child: Container(
-                      width: width * 0.65,
-                      height: height * 0.5,
-                      child: VideoPreview(
-                        retrieveLostData: retrieveLostData,
-                        previewVideo: _previewVideo,
+              width: width,
+              height: height -
+                  (appBar.preferredSize.height +
+                      MediaQuery.of(context).viewPadding.top),
+              child: isUploading
+                  ? Container(
+                      // height: height,
+                      // width: width,
+                      child: Column(
+                        // mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Text(
+                              "GETTING YOUR RESULTS READY.. PLEASE WAIT..",
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          CircularProgressIndicator(strokeWidth: 7),
+                        ],
+                      ))
+                  : Container(
+                      height: height,
+                      // width: width,
+                    child: Stack(
+                        children: <Widget>[
+                          Card(
+                            // elevation: 5,
+                            child: Container(
+                                width: width,
+                              height: height,
+                              child: ValueListenableBuilder(
+                                  valueListenable: videoUploaded,
+                                  builder: (BuildContext context, bool isUploaded,
+                                      __) {
+                                    if (isUploaded) {
+                                      return VideoPreview(
+                                        retrieveLostData: retrieveLostData,
+                                        previewVideo: _previewVideo,
+                                      );
+                                    } else {
+                                      return Container(
+                                        height: height,
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            SizedBox(
+                                              height: height * 0.7,
+                                              child: Image.asset(
+                                                  'images/squat_demo.gif',
+                                                  fit: BoxFit.cover),
+                                            ),
+                                            // SizedBox(
+                                            //                             height: height * 0.2,
+                                            // child:
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                ElevatedButton(
+                                                    child:
+                                                        Text("OPEN YOUR CAMERA"),
+                                                    onPressed: () async {
+                                                      setState(() {
+                                                        isUploading = true;
+                                                      });
+                                                      _onImageButtonPressed(
+                                                          ImageSource.camera,
+                                                          height,
+                                                          width,
+                                                          videoData.uploadFile,
+                                                          videoData.getData,
+                                                          context);
+                                                    }),
+                                                ElevatedButton(
+                                                    child: Text(
+                                                        "CHOOSE LOCAL VIDEO"),
+                                                    onPressed: () async {
+                                                      setState(() {
+                                                        isUploading = true;
+                                                      });
+                                                      _onImageButtonPressed(
+                                                          ImageSource.gallery,
+                                                          height,
+                                                          width,
+                                                          videoData.uploadFile,
+                                                          videoData.getData,
+                                                          context);
+                                                    }),
+                                              ],
+                                            ),
+                                            // ),
+                                          ],
+                                        ),
+                                      );
+                                    }
+                                  }),
+                            ),
+                          ),
+                          PositionCustomPaint(),
+                        ],
                       ),
-                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

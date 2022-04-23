@@ -68,6 +68,13 @@ flutter:
     - images/squat.jpg
     - images/pushup.jpg
     - images/split.jpg
+    - images/squat_demo.gif
+    - images/squat_demo__.gif
+    - images/legdeadlift.jpg
+    - images/lunges.jpg
+
+
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

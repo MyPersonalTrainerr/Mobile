@@ -14,7 +14,7 @@ class ExersicesOverviewScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Personal Trainer'),
+        title: const Text('YOUR PERSONAL TRAINER'),
       ),
       body: ListView.builder(
         itemBuilder: (context, idx) {

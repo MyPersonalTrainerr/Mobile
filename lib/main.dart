@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_personal_trainer/providers/auth_provider.dart';
+import 'package:my_personal_trainer/providers/exercise_video_data.dart';
 import 'package:my_personal_trainer/providers/exercises_provider.dart';
 import 'package:my_personal_trainer/screens/auth_screen.dart';
 import 'package:my_personal_trainer/screens/exercise_details.dart';
@@ -23,7 +24,10 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => Auth(),
-        )
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ExcerciseVideoData(),
+        ),
       ],
       child: Consumer<Auth>(
         builder: (context, authData, _) => MaterialApp(
@@ -32,7 +36,8 @@ class MyApp extends StatelessWidget {
               primarySwatch: Colors.purple,
               accentColor: Colors.amber,
             ),
-            home: authData.isAuth ? ExersicesOverviewScreen() : AuthScreen(),
+            // home: authData.isAuth ? ExersicesOverviewScreen() : AuthScreen(),
+            home: ExersicesOverviewScreen(),
             routes: {
               ExersiceDetailsScreen.routeName: (context) =>
                   ExersiceDetailsScreen(),
